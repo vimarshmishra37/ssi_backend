@@ -1,3 +1,4 @@
+// procedureSchema.js
 const mongoose = require("mongoose");
 
 const procedureSchema = new mongoose.Schema({
