@@ -53,8 +53,9 @@ console.log(User);
 });
 router.post('/register', async (req, res) => {
   const{email,password,name,age,gender,dob,address,phone,role}=req.body;
-  const user = await user.findOne({ email: email });
-  if (user) {
+  const xuser = await user.findOne({ email: email });
+  console.log("wjyefbw",xuser);
+  if (xuser) {
     return res.status(403).json({ Error: "User already exists" });
   }
   const newUser = {
