@@ -13,8 +13,8 @@ var JwtStrategy = require('passport-jwt').Strategy,
     ExtractJwt = require('passport-jwt').ExtractJwt;
     // Set port and start the server
 const port = process.env.PORT || 3000; // You can choose any available port or set via environment variable
-
-
+app.use(cors()); 
+app.use(express.json());
 const mongoose=require("mongoose");
 
 require("dotenv").config( );
@@ -74,7 +74,5 @@ app.use(function(err, req, res, next) {
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
-
-app.use(cors());
 
 module.exports = app;

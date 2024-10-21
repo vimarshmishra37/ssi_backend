@@ -36,13 +36,13 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     console.log(req.body);
     const User = await user.findOne({ email: email });
-
+console.log(User);
     if (!User) {
         return res.status(403).json({ Error: "User does not exist" });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, User.password);
-    if (!isPasswordCorrect) {
+    if (password !== User.password) {
         return res.status(403).json({ Error: "Password is incorrect" });
     }
 
@@ -51,5 +51,30 @@ router.post('/login', async (req, res) => {
     delete userToken.password; // Corrected typo here
     return res.status(200).json(userToken);
 });
-
+router.post('/register', async (req, res) => {
+  const{email,password,name,age,gender,dob,address,phone,role}=req.body;
+  const user = await user.findOne({ email: email });
+  if (user) {
+    return res.status(403).json({ Error: "User already exists" });
+  }
+  const newUser = {
+    email,
+    password: await bcrypt.hash(password, 10),
+    name,
+    age,
+    gender,
+    dob,
+    address,
+    phone,
+    role
+  };
+  const hashPassword = await bcrypt.hash(newUser.password, 10);
+  const createdUser = await user.create(newUser);
+  const token = await getToken(email, createdUser);
+  console.log(createdUser);
+  const userToReturn = { ...createdUser.toJSON(), token };
+delete userToReturn.password;
+return res.status(200).json(userToReturn);
+  //return res.send('User created successfully');
+});
 module.exports = router;
