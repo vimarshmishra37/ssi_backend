@@ -6,6 +6,7 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./models/users');
 var app = express();
+const cors = require('cors');
 const passport = require('passport');
 app.use(passport.initialize());
 var JwtStrategy = require('passport-jwt').Strategy,
@@ -18,7 +19,10 @@ const mongoose=require("mongoose");
 
 require("dotenv").config( );
 uri="mongodb+srv://vim:"+encodeURIComponent("XXBqgiMHu3B59kNx") +"@ssi.1z8xe.mongodb.net/?retryWrites=true&w=majority&appName=SSI";
-mongoose.connect(uri);
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Database connected'))
+  .catch((err) => console.error('Database connection error:', err));
+
 
 let opts = {}
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
@@ -67,7 +71,10 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
+
+app.use(cors());
+
+module.exports = app;
