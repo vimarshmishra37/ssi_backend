@@ -52,6 +52,7 @@ console.log(User);
     return res.status(200).json(userToken);
 });
 router.post('/register', async (req, res) => {
+  console.log(`req.body`, req.body);
   const{email,password,name,age,gender,dob,address,phone,role}=req.body;
   const xuser = await user.findOne({ email: email });
   console.log("wjyefbw",xuser);
