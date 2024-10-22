@@ -3,6 +3,7 @@ const router = express.Router();
 const user = require('../models/users');
 const bcrypt = require('bcrypt');
 const { getToken } = require('../utils/helper');
+const Patient = require('../models/Patient');
 
 /* Create user (for testing purpose only) */
 router.get('/', async function (req, res, next) {
@@ -32,6 +33,40 @@ router.get('/', async function (req, res, next) {
 });
 
 /* User login */
+router.post('/general', async (req, res) => {
+    const { name, patient_id, age, gender, admission_date, discharge_date, admittingDepartment, procedure_name, surgeon, theatre, wound_class, pap_given, antibiotics_given, ssi_event_occurred, event_date, duration_of_pap } = req.body;
+    console.log(req.body);
+    
+    const existingPatient = await Patient.findOne({ patient_id: patient_id });
+    
+    if (existingPatient) {
+        return res.status(403).json({ Error: "Patient already exists" });
+    }
+    const newPatient = {
+        name,
+        patient_id,
+        age,
+        gender,
+        admission_date,
+        discharge_date,
+        admittingDepartment,
+        procedure_name,
+        surgeon,
+        theatre,
+        wound_class,
+        pap_given,
+        antibiotics_given,
+        ssi_event_occurred,
+        event_date,
+        duration_of_pap
+    }
+const createdPatient = await Patient.create(newPatient);
+    const token = await getToken(patient_id, createdPatient);
+    const patientToken = { ...createdPatient.toJSON(), token };
+    return res.status(200).json(patientToken);
+});
+
+
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     console.log(req.body);
@@ -77,6 +112,6 @@ router.post('/register', async (req, res) => {
   const userToReturn = { ...createdUser.toJSON(), token };
 delete userToReturn.password;
 return res.status(200).json(userToReturn);
-  //return res.send('User created successfully');
+
 });
 module.exports = router;
