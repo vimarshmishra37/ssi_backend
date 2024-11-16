@@ -119,39 +119,71 @@ console.log(User);
     delete userToken.password; // Corrected typo here
     return res.status(200).json(userToken);
 });
-/*router.post('/antibiotic', async (req, res) => {
-    const {
-      organism1,
-      organism2,
-      isolate1,
-      isolate2,
-      patientId,
-    } = req.body;
+router.post('/patient', async (req, res) => {
+    const { patientId, priorAntibiotics, prePeriAntibiotics, postAntibiotics, times } = req.body;
   
     try {
-      // Create a new Antibiotic document with the provided data
-      const newAntibiotic = new Antibiotic({
-        patient_id: patientId,
-        organism1,
-        organism2,
-        isolates: [
-          {
-            organism: organism1,
-            data: isolate1,
-          },
-          {
-            organism: organism2,
-            data: isolate2,
-          },
-        ],
-      });
-      await newAntibiotic.save();
-      res.status(201).json({ message: 'Antibiotic data saved successfully' });
+      // Find the patient document by patientId
+      const patient = await Patient.findOne({ patient_id: patientId });
+  
+      if (!patient) {
+        return res.status(404).json({ message: 'Patient not found' });
+      }
+  
+      // Update the relevant fields in the patient document
+      patient.priorAntibiotics = priorAntibiotics;
+      patient.prePeriAntibiotics = prePeriAntibiotics;
+      patient.postAntibiotics = postAntibiotics;
+      patient.inductionTime = times.induction;
+      patient.incisionTime = times.incision;
+      patient.surgeryEndTime = times.surgeryEnd;
+  
+      // Force saving by using validateModifiedOnly option to skip unchanged fields
+      await patient.save({ validateModifiedOnly: true });
+  
+      res.status(200).json({ message: 'Patient data saved successfully' });
     } catch (error) {
-      console.error('Error saving antibiotic data:', error);
-      res.status(500).json({ error: 'Failed to save antibiotic data' });
+      console.error('Error processing patient data:', error);
+      res.status(500).json({ message: 'Error processing patient data', error: error.message });
     }
-  });*/
+  });
+  
+  router.get('/user/:id', async (req, res) => {
+    const { id } = req.params;
+    const patient = await Patient.findOne({ patient_id: id });
+  
+    res.json({
+      success: true,
+      patient,
+    });
+  });
+router.post('/antibiotic', async (req, res) => {
+    const { organism1, organism2, isolate1, isolate2, patientId } = req.body;
+  
+    try {
+      // Find the patient document by patientId
+      const patient = await Patient.findOne({ patient_id: patientId });
+  
+      if (!patient) {
+        return res.status(404).json({ message: 'Patient not found' });
+      }
+  
+      // Update the relevant fields in the patient document
+      patient.microorganisms = { organism1, organism2 };
+      patient.isolate1 = isolate1;
+      patient.isolate2 = isolate2;
+  
+      // Force saving by using validateModifiedOnly option to skip unchanged fields
+      await patient.save({ validateModifiedOnly: true });
+  
+      res.status(200).json({ message: 'Antibiotic data saved successfully' });
+  
+    } catch (error) {
+      console.error('Error processing antibiotic data:', error);
+      res.status(500).json({ message: 'Error processing antibiotic data', error: error.message });
+    }
+  });
+  
 router.post('/register', async (req, res) => {
   console.log(`req.body`, req.body);
   const{email,password,name,age,gender,dob,address,phone,role}=req.body;
