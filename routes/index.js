@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const user = require('../models/users');
+const symptom= require('../models/symptom');
 const bcrypt = require('bcrypt');
 const { getToken } = require('../utils/helper');
 const Patient = require('../models/Patient');
@@ -195,15 +196,98 @@ router.post('/register', async (req, res) => {
 router.get('/user', async (req, res) => {
   try {
     const patients = await Patient.find();
+
     res.json({
       success: true,
       patients,
+      symptom,
     });
   } catch (error) {
     console.error('Error fetching patients:', error);
     res.status(500).json({ error: 'Failed to fetch patients' });
   }
 });
+router.post('/user/symptoms/:patient_id', async (req, res) => {
+  try {
+    // Log the request body for debugging
+    console.log("Request Body:", req.body);
+
+    const { symptoms } = req.body.formData; // Destructure the symptoms from the request
+
+    // Prepare the symptomsData in the expected format (array)
+    const symptomsData = Object.keys(symptoms).map(symptomName => {
+      return {
+        symptom_name: symptomName,
+        days: symptoms[symptomName] // Can be an object or other values
+      };
+    });
+
+    // Find the patient by patient_id
+    let patient = await symptom.findOne({ patient_id: req.params.patient_id });
+
+    if (!patient) {
+      console.log("Patient not found, creating a new patient...");
+
+      // If patient doesn't exist, create a new patient with provided symptomsData
+      patient = new symptom({
+        patient_id: req.params.patient_id,
+        symptoms: symptomsData,
+      });
+
+      // Save the new patient to the database
+      await patient.save();
+      console.log("New patient created:", symptom.find());
+
+      return res.json({ message: 'New patient created and symptoms data saved successfully', patient });
+    }
+
+    console.log("Patient found, updating symptoms...");
+
+    // If patient exists, update their symptoms
+    for (const symptom of symptomsData) {
+      const existingSymptom = patient.symptoms.find(s => s.symptom_name === symptom.symptom_name);
+
+      if (existingSymptom) {
+        // If the symptom exists, update its days
+        existingSymptom.days = symptom.days;
+      } else {
+        // If the symptom doesn't exist, add a new symptom entry
+        patient.symptoms.push({
+          symptom_name: symptom.symptom_name,
+          days: symptom.days,
+        });
+      }
+    }
+
+    // Save the updated patient record
+    await patient.save();
+    p=await symptom.find();
+    console.log("Patient updated:", p);
+
+    res.json({ message: 'Symptoms data updated successfully', patient });
+
+  } catch (err) {
+    console.error("Error in saving/updating patient data:", err);
+    res.status(500).send('Server Error');
+  }
+});
+
+router.get('/user/symptoms/:patient_id', async (req, res) => {
+  try {
+    const { patient_id } = req.params;
+    const patient = await symptom.findOne({ patient_id });
+
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    res.json(patient);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 // Get specific patient by id
 router.get('/user/:id', async (req, res) => {
