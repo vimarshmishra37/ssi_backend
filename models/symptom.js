@@ -8,7 +8,7 @@ const daySchema = new mongoose.Schema({
 
 const symptomSchema = new mongoose.Schema({
   symptom_name: String,
-  days: [daySchema], // Array of days with tick/cross values (now using the daySchema)
+  days: [daySchema],
 });
 
 const symptom= new mongoose.Schema({

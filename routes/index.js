@@ -209,7 +209,6 @@ router.get('/user', async (req, res) => {
 });
 router.post('/user/symptoms/:patient_id', async (req, res) => {
   try {
-    // Log the request body for debugging
     console.log("Request Body:", req.body);
 
     const { symptoms } = req.body.formData; // Destructure the symptoms from the request
@@ -218,7 +217,7 @@ router.post('/user/symptoms/:patient_id', async (req, res) => {
     const symptomsData = Object.keys(symptoms).map(symptomName => {
       return {
         symptom_name: symptomName,
-        days: symptoms[symptomName] // Can be an object or other values
+        days: symptoms[symptomName] 
       };
     });
 
