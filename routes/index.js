@@ -287,6 +287,34 @@ router.get('/user/symptoms/:patient_id', async (req, res) => {
   }
 });
 
+router.post('/patient', async (req, res) => {
+  const { patientId, priorAntibiotics, prePeriAntibiotics, postAntibiotics, times } = req.body;
+
+  try {
+    // Find the patient document by patientId
+    const patient = await Patient.findOne({ patient_id: patientId });
+
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    // Update the relevant fields in the patient document
+    patient.priorAntibiotics = priorAntibiotics;
+    patient.prePeriAntibiotics = prePeriAntibiotics;
+    patient.postAntibiotics = postAntibiotics;
+    patient.inductionTime = times.induction;
+    patient.incisionTime = times.incision;
+    patient.surgeryEndTime = times.surgeryEnd;
+
+    // Force saving by using validateModifiedOnly option to skip unchanged fields
+    await patient.save({ validateModifiedOnly: true });
+
+    res.status(200).json({ message: 'Patient data saved successfully' });
+  } catch (error) {
+    console.error('Error processing patient data:', error);
+    res.status(500).json({ message: 'Error processing patient data', error: error.message });
+  }
+});
 
 // Get specific patient by id
 router.get('/user/:id', async (req, res) => {
