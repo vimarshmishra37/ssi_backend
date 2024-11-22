@@ -93,17 +93,21 @@ router.post('/login', async (req, res) => {
 
 // Patient registration endpoint
 router.post('/general', async (req, res) => {
-  const { name, patient_id, age, gender, admission_date, discharge_date, admittingDepartment, procedure_name, surgeon, theatre, wound_class, pap_given, antibiotics_given, ssi_event_occurred, event_date, duration_of_pap } = req.body;
-
-  const existingPatient = await Patient.findOne({ patient_id: patient_id });
+  const { name, age,email, gender,height, weight, bmi, admission_date, discharge_date, admittingDepartment, procedure_name, surgeon, theatre, wound_class, pap_given, antibiotics_given, ssi_event_occurred, event_date, duration_of_pap } = req.body;
+console.log(req.body);
+  const existingPatient = await Patient.findOne({ email: email });
   if (existingPatient) {
+    console.log(existingPatient);
     return res.status(403).json({ Error: "Patient already exists" });
   }
 
   const newPatient = {
     name,
-    patient_id,
     age,
+    email,
+    height,
+    weight,
+    bmi,
     gender,
     admission_date,
     discharge_date,
@@ -118,10 +122,11 @@ router.post('/general', async (req, res) => {
     event_date,
     duration_of_pap
   };
-
+  console.log(newPatient);
   try {
     const createdPatient = await Patient.create(newPatient);
-    const token = await getToken(patient_id, createdPatient);
+    console.log(createdPatient);
+    const token = await getToken(email, createdPatient);
     const patientToken = { ...createdPatient.toJSON(), token };
     return res.status(200).json(patientToken);
   } catch (error) {
@@ -351,7 +356,7 @@ router.get('/user/:id', async (req, res) => {
   try {
     // Fetch patient from the database
     const patient = await Patient.findOne({ patient_id: id });
-
+    console.log(patient);
     if (!patient) {
       return res.status(404).json({ error: 'Patient not found' });
     }

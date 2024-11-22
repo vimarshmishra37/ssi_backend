@@ -1,9 +1,15 @@
+const e = require("express");
 const mongoose = require("mongoose");
-
+const { EventEmitterAsyncResource } = require("nodemailer/lib/xoauth2");
+const AutoIncrement = require("mongoose-sequence")(mongoose);
 const patientSchema = new mongoose.Schema({
-  patient_id: { type: Number, required: true, unique: true },
+  patient_id: { type: Number, unique: true },
   name: { type: String, required: true },
-  age: { type: Number, required: true },
+  email: { type: String, required: true ,unique: true},
+  age: { type: Number, required: true }, // Age in years
+  height: { type: Number }, // Height in centimeters (cm)
+  weight: { type: Number }, // Weight in kilograms (kg)
+  bmi: { type: Number }, // Body Mass Index (BMI)
   gender: { type: String, required: true },
   admission_date: { type: Date, required: true },
   discharge_date: { type: Date },
@@ -11,7 +17,11 @@ const patientSchema = new mongoose.Schema({
   admittingDepartment: { type: String, required: true },
   surgeon: { type: String, required: true },
   theatre: { type: String, required: true },
-  wound_class: { type: String, enum: ['clean', 'cleanContaminated', 'contaminated', 'dirtyInfected'], required: true },
+  wound_class: {
+    type: String,
+    enum: ['clean', 'cleanContaminated', 'contaminated', 'dirtyInfected'],
+    required: true
+  },
   pap_given: { type: String, enum: ['yes', 'no'], required: true },
   antibiotics_given: { type: String },
   duration_of_pap: { type: String },
@@ -74,5 +84,6 @@ const patientSchema = new mongoose.Schema({
     surgeryEnd: { type: String }
   }
 });
+patientSchema.plugin( AutoIncrement, { inc_field: "patient_id", start_seq: 1000 });
 
 module.exports = mongoose.model("Patients", patientSchema);
