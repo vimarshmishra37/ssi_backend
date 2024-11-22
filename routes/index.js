@@ -7,6 +7,35 @@ const { getToken } = require('../utils/helper');
 const Patient = require('../models/Patient');
 const Antibiotic = require('../models/antibiotic'); 
 const nodemailer = require('nodemailer');
+const axios = require('axios');
+/*router.get('/predict', async (req, res) => {
+  const inputData = [5.1, 3.5, 1.4, 0.2]; // Hardcoded input data
+  try {
+      const response = await axios.post('http://127.0.0.1:5000/predict', {
+          data: inputData,
+      });
+      console.log('Prediction:', response.data);
+      res.status(200).json({ success: true, prediction: response.data });
+  } catch (error) {
+      console.error('Error during prediction:', error.message);
+      res.status(500).json({ success: false, message: 'Prediction service failed', error: error.message });
+  }
+});
+*/
+async function getPrediction(inputData) {
+  try {
+    // Sending data in the correct format to Flask API
+    const response = await axios.post('http://127.0.0.1:5000/predict', {
+      data: inputData,  // Ensure that data is wrapped inside "data" key
+    });
+
+    return { success: true, prediction: response.data };
+  } catch (error) {
+    console.error('Error during prediction:', error.message);
+    return { success: false, message: 'Prediction service failed', error: error.message };
+  }
+}
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -316,25 +345,47 @@ router.post('/patient', async (req, res) => {
     res.status(500).json({ message: 'Error processing patient data', error: error.message });
   }
 });
-
-// Get specific patient by id
 router.get('/user/:id', async (req, res) => {
   const { id } = req.params;
+
   try {
+    // Fetch patient from the database
     const patient = await Patient.findOne({ patient_id: id });
 
     if (!patient) {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
-    res.json({
-      success: true,
-      patient,
-    });
+    // Ensure the data format matches what Flask expects
+    const inputData = {
+      Age: patient.age || 0,  // Age
+      BMI: patient.bmi || 0,   // BMI
+      Diabetes_Status: patient.diabetes === 'yes' ? 'Yes' : 'No',  // Diabetes status as "Yes" or "No"
+      Gender: patient.gender === 'male' ? 'Male' : 'Female',  // Gender as string
+      Wound_Class: patient.wound_class || 'Clean', // Wound Class (must match one of the possible values)
+      Procedure_Name: patient.procedure_name || 'Unknown',  // Procedure Name (ensure valid string)
+      Procedure_Duration: patient.procedure_duration || 0,  // Procedure Duration (numeric)
+    };
+
+    // Send the formatted input data for prediction
+    const predictionResult = await getPrediction(inputData);
+
+    if (predictionResult.success) {
+      return res.json({
+        success: true,
+        patient,
+        prediction: predictionResult.prediction,  // The prediction returned from Flask
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        patient,
+        message: 'Failed to get prediction',
+      });
+    }
   } catch (error) {
     console.error('Error fetching patient:', error);
     res.status(500).json({ error: 'Failed to fetch patient' });
   }
 });
-
 module.exports = router;
