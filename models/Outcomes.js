@@ -1,6 +1,5 @@
 // outcomeSchema.js
 const mongoose = require("mongoose");
-
 const outcomeSchema = new mongoose.Schema({
     outcome_id: { type: Number, required: true, unique: true },
     procedure_id: { type: Number, required: true, ref: "Procedures" },
