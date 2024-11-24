@@ -93,7 +93,7 @@ router.post('/login', async (req, res) => {
 
 // Patient registration endpoint
 router.post('/general', async (req, res) => {
-  const { name, age,email, gender,height, weight, bmi, admission_date, discharge_date, admittingDepartment, procedure_name, surgeon, theatre, wound_class, pap_given, antibiotics_given, ssi_event_occurred, event_date, duration_of_pap } = req.body;
+  const { name, age,email,diabietic, gender,height, weight, bmi, admission_date, discharge_date, admittingDepartment, procedure_name, surgeon, theatre, wound_class, pap_given, antibiotics_given, ssi_event_occurred, event_date, duration_of_pap } = req.body;
 console.log(req.body);
   const existingPatient = await Patient.findOne({ email: email });
   if (existingPatient) {
@@ -109,6 +109,7 @@ console.log(req.body);
     weight,
     bmi,
     gender,
+    diabietic,
     admission_date,
     discharge_date,
     admittingDepartment,
@@ -125,6 +126,7 @@ console.log(req.body);
   console.log(newPatient);
   try {
     const createdPatient = await Patient.create(newPatient);
+    console.log("1");
     console.log(createdPatient);
     const token = await getToken(email, createdPatient);
     const patientToken = { ...createdPatient.toJSON(), token };
@@ -337,10 +339,8 @@ router.post('/patient', async (req, res) => {
     patient.priorAntibiotics = priorAntibiotics;
     patient.prePeriAntibiotics = prePeriAntibiotics;
     patient.postAntibiotics = postAntibiotics;
-    patient.inductionTime = times.induction;
-    patient.incisionTime = times.incision;
-    patient.surgeryEndTime = times.surgeryEnd;
-
+    patient.times = times;
+console.log(patient);
     // Force saving by using validateModifiedOnly option to skip unchanged fields
     await patient.save({ validateModifiedOnly: true });
 
