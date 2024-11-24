@@ -8,7 +8,7 @@ const patientSchema = new mongoose.Schema({
   email: { type: String, required: true ,unique: true},
   age: { type: Number, required: true }, // Age in years
   height: { type: Number }, // Height in centimeters (cm)
-  diabietic: { type: String, enum: ['yes', 'no'], required: true },
+  diabietic: { type: String, enum: ['Yes', 'No'], required: true },
   weight: { type: Number }, // Weight in kilograms (kg)
   bmi: { type: Number }, // Body Mass Index (BMI)
   gender: { type: String, required: true },
